@@ -1,0 +1,34 @@
+body{
+    background-color: beige;
+}
+
+
+p{
+    font-weight: bold;
+    font-size: 20px;
+    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+}
+/* Style 1: Body */
+body {
+    font-family: Arial, sans-serif;
+    color: #7a6e3e;
+    background-color: #f9f9f9;
+}
+
+
+.emphasizedText {
+    color: #b35c5c;
+    font-weight: bold;
+}
+
+.emphasizedText{
+    font-style:italic;
+    color: rgb(165, 138, 28);
+}
+body{
+    background-color: rgb(232, 221, 207);
+    font-family:Cambria, Cochin, Georgia, Times, 'Times New Roman', serif
+    border:7.5px solid burlywood;
+    margin: 50px;
+    padding: 50px;
+}

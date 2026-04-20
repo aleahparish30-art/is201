@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BYU Cougar Run</title>
+<style>
+  body {
+    margin: 0;
+    background: #002E5D;
+    color: white;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    text-align: center;
+    overflow: hidden;
+  }
+
+  h1 { margin: 10px; font-style: italic; }
+
+  #game {
+    position: relative;
+    width: 800px;
+    height: 250px;
+    margin: 20px auto;
+    background: linear-gradient(#cfe8ff, #ffffff);
+    overflow: hidden;
+    border: 4px solid #ffffff;
+    border-radius: 8px;
+    box-shadow: 0px 10px 30px rgba(0,0,0,0.5);
+  }
+
+  /* COSMO THE COUGAR */
+  #cosmo {
+    position: absolute;
+    bottom: 0;
+    left: 50px;
+    font-size: 45px;
+    transform: scaleX(-1);
+    z-index: 10;
+  }
+
+  .jump {
+    animation: jump 0.5s cubic-bezier(0.215, 0.61, 0.355, 1);
+  }
+
+  @keyframes jump {
+    0% { bottom: 0; }
+    45% { bottom: 120px; }
+    55% { bottom: 120px; }
+    100% { bottom: 0; }
+  }
+
+  /* OBSTACLES */
+  .obstacle {
+    position: absolute;
+    bottom: 0;
+  }
+
+  .tree {
+    width: 25px;
+    height: 30px;
+    background: #2d5a27;
+    border-radius: 4px;
+  }
+
+  .mountain {
+    width: 0;
+    height: 0;
+    border-left: 20px solid transparent;
+    border-right: 20px solid transparent;
+    border-bottom: 35px solid #555;
+  }
+
+  .tail {
+    width: 30px;
+    height: 20px;
+    background: #c19a6b;
+    border-radius: 50% 50% 0 0;
+  }
+
+  #score { font-size: 24px; font-weight: bold; margin-top: 10px; }
+
+  #gameOver {
+    display: none;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.8);
+    padding: 20px;
+    border-radius: 10px;
+    z-index: 20;
+  }
+
+  .restart-hint { font-size: 16px; color: #aaa; }
+</style>
+</head>
+<body>
+
+<h1>BYU Cougar Run 🐆</h1>
+<div id="score">Score: 0</div>
+
+<div id="game">
+  <div id="gameOver">
+    <div style="font-size: 32px; color: #ff4d4d; font-weight: bold;">GAME OVER</div>
+    <div class="restart-hint">Press 'R' to try again</div>
+  </div>
+  <div id="cosmo">🐆</div>
+</div>
+<p>Press SPACE to jump</p>
+
+<script>
+const cosmo = document.getElementById("cosmo");
+const game = document.getElementById("game");
+const scoreDisplay = document.getElementById("score");
+const gameOverText = document.getElementById("gameOver");
+
+let isJumping = false;
+let score = 0;
+let gameSpeed = 5;
+const maxSpeed = 15; // Prevents the game from becoming impossible
+let isGameOver = false;
+
+function jump() {
+  if (isJumping || isGameOver) return;
+  isJumping = true;
+  cosmo.classList.add("jump");
+
+  // Remove class after animation finishes
+  setTimeout(() => {
+    cosmo.classList.remove("jump");
+    isJumping = false;
+  }, 500);
+}
+
+function createObstacle() {
+  if (isGameOver) return;
+
+  const obstacle = document.createElement("div");
+  obstacle.classList.add("obstacle");
+
+  // Randomly pick an obstacle look
+  const types = ["tree", "mountain", "tail"];
+  const type = types[Math.floor(Math.random() * types.length)];
+  obstacle.classList.add(type);
+
+  let obstaclePosition = 800; 
+  obstacle.style.left = obstaclePosition + "px";
+  game.appendChild(obstacle);
+
+  // Movement loop
+  const moveInterval = setInterval(() => {
+    if (isGameOver) {
+      clearInterval(moveInterval);
+      obstacle.remove();
+      return;
+    }
+
+    obstaclePosition -= gameSpeed;
+    obstacle.style.left = obstaclePosition + "px";
+
+    // Collision Detection
+    const obstacleRect = obstacle.getBoundingClientRect();
+    const cosmoRect = cosmo.getBoundingClientRect();
+
+    // We use a small "buffer" (15px) so the hitboxes feel more natural
+    if (
+      cosmoRect.right - 15 > obstacleRect.left &&
+      cosmoRect.left + 15 < obstacleRect.right &&
+      cosmoRect.bottom - 10 > obstacleRect.top
+    ) {
+      endGame();
+    }
+
+    // Remove obstacle if it goes off screen
+    if (obstaclePosition < -100) {
+      clearInterval(moveInterval);
+      obstacle.remove();
+    }
+  }, 20);
+
+  // --- DINOSAUR GAME SPACING LOGIC ---
+  // Define a pixel gap range
+  const minGap = 600; 
+  const maxGap = 1100;
+  const randomGap = Math.floor(Math.random() * (maxGap - minGap + 1)) + minGap;
+
+  // Calculate delay based on current speed (Time = Distance / Speed)
+  // We multiply by 20 because our move interval runs every 20ms
+  const waitTime = (randomGap / gameSpeed) * 20;
+  
+
+  setTimeout(createObstacle, waitTime);
+}
+
+function updateScore() {
+  if (isGameOver) return;
+  score++;
+  scoreDisplay.textContent = "Score: " + score;
+
+  // Increase speed every 100 points until maxSpeed is reached
+  if (score % 100 === 0 && gameSpeed < maxSpeed) {
+   gameSpeed += 0.005;
+;
+  }
+
+  setTimeout(updateScore, 100);
+}
+
+function endGame() {
+  isGameOver = true;
+  gameOverText.style.display = "block";
+}
+
+function restart() {
+  // Clear existing obstacles
+  document.querySelectorAll(".obstacle").forEach(o => o.remove());
+  
+  // Reset variables
+  score = 0;
+  gameSpeed = 5;
+  isGameOver = false;
+  gameOverText.style.display = "none";
+  scoreDisplay.textContent = "Score: 0";
+
+  // Restart loops
+  createObstacle();
+  updateScore();
+}
+
+// Global Controls
+window.addEventListener("keydown", function(e) {
+  if (e.code === "Space") {
+    e.preventDefault(); // Prevent page scrolling
+    jump();
+  }
+  if (e.code === "KeyR" && isGameOver) {
+    restart();
+  }
+});
+
+// INITIAL START
+createObstacle();
+updateScore();
+</script>
+
+</body>
+</html>
